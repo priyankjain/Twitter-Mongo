@@ -17,6 +17,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.json.JSONObject;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -112,11 +113,30 @@ public final class RateLimitedSearch {
 				QueryResult result;
 				result = twitter.search(query);
 				List<Status> tweets = result.getTweets();
+				try
+				{
 				for (Status tweet : tweets) 
 					{
 					String rawJSON = DataObjectFactory.getRawJSON(tweet);
+					JSONObject obj_tweet=new JSONObject(rawJSON);
+					obj_tweet.put("show_name",show.getElementsByTagName("name").item(0).getTextContent());
+					String tweet_text=obj_tweet.getString("text");
+					String keywords="";
+					for(int j=0;j<tagList.length;j++)
+					{
+						if(tweet_text.contains(tagList[j]))
+							keywords+=tagList[j]+",";
+					}
+					
+					obj_tweet.put("keywords", keywords);
+					rawJSON=obj_tweet.toString();
 					TweetQueue.tweetQueue.add(rawJSON);
 					}
+				}
+				catch(Exception e)
+				{
+					e.printStackTrace();
+				}
 				if(tweets.size()>1)
 				since=String.valueOf(tweets.get(tweets.size()-1).getId());
 				else 
