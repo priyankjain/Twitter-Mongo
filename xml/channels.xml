@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<channels>
+	<channel>
+		<name>Colors</name>
+		<shows>
+			<show>
+				<name>Big Boss 7</name>
+				<follow>BiggBoss,BeingSalmanKhan</follow>
+				<keywords>iphone</keywords>
+				<hashtags>bb7,salmankhan,beinghuman,ThankYouSachin</hashtags>
+				<mentions>BiggBoss</mentions>
+				<start>2013-02-02</start>
+			</show>
+		</shows>
+	</channel>
+</channels>
