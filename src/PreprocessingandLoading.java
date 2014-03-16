@@ -26,6 +26,7 @@ public class PreprocessingandLoading extends Thread{
 				
 				String tweet=TweetQueue.tweetQueue.poll();
 				JSONObject obj_tweet=new JSONObject(tweet);
+				obj_tweet.remove("id");
 				String text="";
 				//Retweet
 				JSONObject obj_user;
@@ -34,6 +35,7 @@ public class PreprocessingandLoading extends Thread{
 				{
 					JSONObject retweeted_obj_tweet=obj_tweet.getJSONObject("retweeted_status");
 					text=retweeted_obj_tweet.getString("text");
+					retweeted_obj_tweet.remove("id");
 					String retweet_id=retweeted_obj_tweet.getString("id_str");
 					int mainSentiment;
 					if(text.length()!=0)
@@ -98,14 +100,14 @@ public class PreprocessingandLoading extends Thread{
 				String name=obj_user.getString("name");
 				if(name.length()!=0)
 				{
-					name=name.substring(0,name.indexOf(" "));
+					name=name.split(" ")[0];
 				}
-				
 				JSONObject json = JsonReader.readJsonFromUrl("http://api.genderize.io/?name="+name);
 				obj_user.put("gender", json.get("gender"));
 				DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 				Date date = new Date();
 				String datestring=dateFormat.format(date);
+				obj_user.remove("id");
 				obj_tweet.put("inserted_at",datestring);
 				obj_user.put("inserted_at",datestring);
 				String tweet_id=obj_tweet.getString("id_str");

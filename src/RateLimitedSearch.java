@@ -124,12 +124,16 @@ public final class RateLimitedSearch {
 					String keywords="";
 					for(int j=0;j<tagList.length;j++)
 					{
-						if(tweet_text.contains(tagList[j]))
-							keywords+=tagList[j]+",";
+						if(tweet_text.toLowerCase().contains(tagList[j].toLowerCase()))
+							{
+								keywords+=tagList[j]+",";
+							}
+						
 					}
 					
 					obj_tweet.put("keywords", keywords);
 					rawJSON=obj_tweet.toString();
+					storeJSON(rawJSON+"\n\n","show.txt");
 					TweetQueue.tweetQueue.add(rawJSON);
 					}
 				}
