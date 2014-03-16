@@ -93,6 +93,7 @@ public class PreprocessingandLoading extends Thread{
 				 * obj_tweet.toString() and obj_user.toString() for conversion
 				 */					
 				}
+				
 				String name=obj_user.getString("name");
 				if(name.length()!=0)
 				{
