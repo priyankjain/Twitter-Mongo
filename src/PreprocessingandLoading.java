@@ -1,7 +1,9 @@
-import java.io.IOException;
 import java.net.UnknownHostException;
 
-import twitter4j.JSONObject;
+
+import org.json.JSONML;
+//import twitter4j.JSONObject;
+import org.json.JSONObject;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -60,7 +62,7 @@ public class PreprocessingandLoading extends Thread{
 					 * just insert the JSONObject obj_user in user table
 					 * 
 					 * obj_tweet.toString() and obj_user.toString() for conversion
-					 */
+					 */					
 				}
 				//Normal tweet
 				else					
@@ -89,8 +91,11 @@ public class PreprocessingandLoading extends Thread{
 				 * just insert the JSONObject obj_user in user table
 				 * 
 				 * obj_tweet.toString() and obj_user.toString() for conversion
-				 */	
+				 */					
 				}
+				String name=obj_user.getString("name");
+				JSONObject json = JsonReader.readJsonFromUrl("http://api.genderize.io/?name="+name);
+				obj_user.put("gender", json.get("gender"));
 				try
 				{
 				insertIntoMongo(obj_tweet.toString(),obj_user.toString(),user_id);
