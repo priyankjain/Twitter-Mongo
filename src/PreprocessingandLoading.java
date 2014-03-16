@@ -1,9 +1,9 @@
+import java.io.IOException;
 import java.net.UnknownHostException;
 
 
-import org.json.JSONML;
 //import twitter4j.JSONObject;
-import org.json.JSONObject;
+import org.json.*;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -94,6 +94,10 @@ public class PreprocessingandLoading extends Thread{
 				 */					
 				}
 				String name=obj_user.getString("name");
+				if(name.length()!=0)
+				{
+					name=name.substring(0,name.indexOf(" "));
+				}
 				JSONObject json = JsonReader.readJsonFromUrl("http://api.genderize.io/?name="+name);
 				obj_user.put("gender", json.get("gender"));
 				try
