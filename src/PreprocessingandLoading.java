@@ -15,10 +15,12 @@ import com.mongodb.util.JSON;
 
 public class PreprocessingandLoading extends Thread{
 
+	Mongo mongo;
 	public void run()
 	{
 		try
 		{
+			mongo = new Mongo();
 		while(true)
 		{
 			if(!TweetQueue.tweetQueue.isEmpty())
@@ -130,7 +132,6 @@ public class PreprocessingandLoading extends Thread{
 	
 	public void insertIntoMongo(String tweet,String user,String tweet_id,String user_id)throws UnknownHostException
 	{
-		Mongo mongo = new Mongo();
 		DB db=mongo.getDB("tvshows");
 		DBCollection tweetCollection=db.getCollection("tweet");
 		BasicDBObject tweetquery=new BasicDBObject("id_str",tweet_id);

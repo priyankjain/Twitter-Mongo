@@ -5,7 +5,10 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -79,11 +82,37 @@ public final class RateLimitedSearch {
 		Document doc = dBuilder.parse(fXmlFile);
 		doc.getDocumentElement().normalize();
 		NodeList nList = doc.getElementsByTagName("show");
+		NodeList charSearchList=doc.getElementsByTagName("character");
 		Twitter twitter = new TwitterFactory().getSingleton();
 		Properties prop = new Properties();
 		prop.load(new FileInputStream("twitter4j.properties"));
-		int count=0,show_no=0;
+		int count=0,show_no=0,char_no=0;
 		int no_of_shows=nList.getLength();
+		int no_of_chars=charSearchList.getLength();
+		HashMap showMap=new HashMap();
+		HashMap charMap=new HashMap();
+		boolean isChar=false;
+		int num;
+		for(int i=0;i<nList.getLength();i++)
+		{
+			Element show=(Element)nList.item(i);
+			String showName=((show.getElementsByTagName("name").item(0)).getTextContent()).toLowerCase();
+			String tags[]=show.getElementsByTagName("tags").item(0).getTextContent().split(",");
+			for(String tag:tags)
+			{
+				showMap.put(tag,showName);
+			}	
+			NodeList characters=show.getElementsByTagName("characters");
+			for(int j=0;j<characters.getLength();j++)
+			{
+				String character=((((Element)characters.item(j)).getElementsByTagName("title").item(0)).getTextContent()).toLowerCase();
+				String keys[]=((((Element)characters.item(j)).getElementsByTagName("keywords").item(0)).getTextContent()).toLowerCase().split(",");
+				for(String key:keys)
+				{
+					charMap.put(key,character+","+showName);
+				}
+			}
+		}
 		while(true)
 		{
 			RateLimitStatus rls= twitter.getRateLimitStatus().get("/users/search");;
@@ -92,15 +121,35 @@ public final class RateLimitedSearch {
 					Thread.sleep(rls.getSecondsUntilReset()*1000);
 					continue;
 				}
-			for(int i=count;i-count<30;i++)
+			for(int i=0;i<30;i++)
 			{	
 				// For each show
-				show_no=count%(no_of_shows);
+				num=count%(no_of_shows+no_of_chars);
 				count++;
-				Node nNode = nList.item(show_no);
-				Element show = (Element) nNode;
-				String tagList[]=show.getElementsByTagName("tags").item(0).getTextContent().split(",");
-				String since= show.getElementsByTagName("since").item(0).getTextContent();
+				count%=(no_of_shows+no_of_chars);
+				Node nNode;
+				String tagList[];
+				String since;
+				Element show=null;
+				Element character=null;
+				if(num<no_of_shows)
+				{//Search for show
+					isChar=false;
+					show_no=num;
+					nNode = nList.item(show_no);
+					show=(Element)nNode;
+					tagList=show.getElementsByTagName("tags").item(0).getTextContent().split(",");
+					since= show.getElementsByTagName("since").item(0).getTextContent();
+				}
+				else
+				{
+					isChar=true;
+					char_no=num-no_of_shows;
+					nNode=charSearchList.item(char_no);
+					character=(Element)nNode;
+					tagList=character.getElementsByTagName("keywords").item(0).getTextContent().split(",");
+					since=character.getElementsByTagName("since").item(0).getTextContent();
+				}
 				String q="";
 				for(String tag: tagList)
 				{
@@ -119,19 +168,56 @@ public final class RateLimitedSearch {
 					{
 					String rawJSON = DataObjectFactory.getRawJSON(tweet);
 					JSONObject obj_tweet=new JSONObject(rawJSON);
-					obj_tweet.put("show_name",show.getElementsByTagName("name").item(0).getTextContent());
+					//obj_tweet.put("show_name",show.getElementsByTagName("name").item(0).getTextContent());
 					String tweet_text=obj_tweet.getString("text");
 					String keywords="";
+					String show_list="";
+					String character_list="";
+					if(!isChar)
+					show_list=show.getElementsByTagName("name").item(0).getTextContent().toLowerCase()+",";
+					else
+					{
+						character_list=character.getElementsByTagName("title").item(0).getTextContent().toLowerCase()+",";
+						Element parent_show=(Element)character.getParentNode().getParentNode();
+						String parent_show_name=parent_show.getElementsByTagName("name").item(0).getTextContent().toLowerCase();
+						if(!show_list.contains(parent_show_name))
+						{
+							show_list+=parent_show_name+",";
+						}
+					}
 					for(int j=0;j<tagList.length;j++)
 					{
 						if(tweet_text.toLowerCase().contains(tagList[j].toLowerCase()))
 							{
-								keywords+=tagList[j]+",";
-							}
-						
+								keywords+=tagList[j].toLowerCase()+",";
+							}	
 					}
-					
+					Iterator it=showMap.entrySet().iterator();
+					while(it.hasNext())
+					{
+						Map.Entry me=(Map.Entry)it.next();
+						if(tweet_text.toLowerCase().contains((String)me.getKey()) && !show_list.contains((String)me.getValue()))
+						{
+							show_list+=me.getValue()+",";
+						}
+					}
+					it=charMap.entrySet().iterator();
+					while(it.hasNext())
+					{
+						Map.Entry me=(Map.Entry)it.next();
+						String show_for_character[]=((String)me.getValue()).split(",");
+						if(tweet_text.toLowerCase().contains((String)me.getKey()) && !character_list.contains(show_for_character[0]))
+						{
+							character_list+=show_for_character[0]+",";
+							if(!show_list.contains(show_for_character[1]))
+							{
+								show_list+=show_for_character[1]+",";
+							}
+						}
+					}
 					obj_tweet.put("keywords", keywords);
+					obj_tweet.put("show_list", show_list);
+					obj_tweet.put("char_list", character_list);
 					rawJSON=obj_tweet.toString();
 					storeJSON(rawJSON+"\n\n","show.txt");
 					TweetQueue.tweetQueue.add(rawJSON);
@@ -145,10 +231,13 @@ public final class RateLimitedSearch {
 				since=String.valueOf(tweets.get(tweets.size()-1).getId());
 				else 
 				{
-					System.out.println("Sleeping now for 15 minutes....now new tweets retrieved");
+					System.out.println("Sleeping now for 15 minutes....no new tweets retrieved");
 					Thread.sleep(15*60*1000);
 				}
+				if(!isChar)
 				show.getElementsByTagName("since").item(0).setTextContent(since);
+				else
+				character.getElementsByTagName("since").item(0).setTextContent(since);
 				TransformerFactory transformerFactory = TransformerFactory.newInstance();
 				Transformer transformer = transformerFactory.newTransformer();
 				DOMSource domSource = new DOMSource(doc);

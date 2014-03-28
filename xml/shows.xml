@@ -1,7 +1,36 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?><shows>
-<show>
-<name>Satyameva Jayate</name>
-<tags>satyamevjayate,wasteiswealth</tags>
-<since>445119552666365954</since>
-</show>
+	<show>
+		<name>Satyameva Jayate</name>
+		<characters>
+			<character>
+				<title>Aamir Khan</title>
+				<keywords>@aamir</keywords>
+				<since>449555487944478721</since>
+			</character>
+			<character>
+				<title>Aamir Khan</title>
+				<keywords>@aamir</keywords>
+				<since>0</since>
+			</character>
+		</characters>
+		<tags>satyamevjayate,wasteiswealth</tags>
+		<since>44</since>
+	</show>
+	<show>
+		<name>BiggBoss 7</name>
+		<characters>
+			<character>
+				<title>Salman Khan</title>
+				<keywords>@beinghuman</keywords>
+				<since>447781930910887936</since>
+			</character>
+			<character>
+				<title>Gauhar Khan</title>
+				<keywords>Gaushal</keywords>
+				<since>0</since>
+			</character>
+		</characters>
+		<tags>@biggboss,@gaushal,@beinghuman</tags>
+		<since>447755057187262464</since>
+	</show>
 </shows>
