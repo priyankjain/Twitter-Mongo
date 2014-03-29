@@ -217,7 +217,7 @@ public final class RateLimitedSearch {
 					}
 					obj_tweet.put("keywords", keywords);
 					obj_tweet.put("show_list", show_list);
-					obj_tweet.put("char_list", character_list);
+					obj_tweet.put("character_list", character_list);
 					rawJSON=obj_tweet.toString();
 					storeJSON(rawJSON+"\n\n","show.txt");
 					TweetQueue.tweetQueue.add(rawJSON);
@@ -229,13 +229,11 @@ public final class RateLimitedSearch {
 				}
 				if(tweets.size()>1)
 				since=String.valueOf(tweets.get(tweets.size()-1).getId());
-				else 
-				{
-					System.out.println("Sleeping now for 15 minutes....no new tweets retrieved");
-					Thread.sleep(15*60*1000);
-				}
 				if(!isChar)
-				show.getElementsByTagName("since").item(0).setTextContent(since);
+				{
+					int item_no=show.getElementsByTagName("since").getLength();
+					show.getElementsByTagName("since").item(item_no-1).setTextContent(since);
+				}
 				else
 				character.getElementsByTagName("since").item(0).setTextContent(since);
 				TransformerFactory transformerFactory = TransformerFactory.newInstance();

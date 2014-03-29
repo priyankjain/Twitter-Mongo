@@ -98,8 +98,9 @@ public class PreprocessingandLoading extends Thread{
 				 * obj_tweet.toString() and obj_user.toString() for conversion
 				 */					
 				}
-				
-				String name=obj_user.getString("name");
+				String device=IdentifyDevice.DeviceClassify(obj_tweet.getString("source"));
+				obj_tweet.put("device", device);
+				String name=obj_user.getString("name");				
 				if(name.length()!=0)
 				{
 					name=name.split(" ")[0];
@@ -132,19 +133,19 @@ public class PreprocessingandLoading extends Thread{
 	
 	public void insertIntoMongo(String tweet,String user,String tweet_id,String user_id)throws UnknownHostException
 	{
-		DB db=mongo.getDB("tvshows");
-		DBCollection tweetCollection=db.getCollection("tweet");
+		DB db=mongo.getDB("twitter");
+		DBCollection tweetCollection=db.getCollection("tweets");
 		BasicDBObject tweetquery=new BasicDBObject("id_str",tweet_id);
 		if(tweetCollection.find(tweetquery).count()==0)
 		{
 			DBObject tweetObject=(DBObject)JSON.parse(tweet);
 			tweetCollection.insert(tweetObject);
 		}
-		DBCollection userCollection=db.getCollection("user");
+		DBCollection userCollection=db.getCollection("users");
 		BasicDBObject query=new BasicDBObject("id_str",user_id);
 		if(userCollection.find(query).count()==0)
 		{
-			DBObject userObject=(DBObject)JSON.parse(tweet);
+			DBObject userObject=(DBObject)JSON.parse(user);
 			userCollection.insert(userObject);
 		}
 	}
