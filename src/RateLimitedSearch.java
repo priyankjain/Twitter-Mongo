@@ -5,6 +5,9 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -76,6 +79,8 @@ public final class RateLimitedSearch {
 			ParserConfigurationException,JSONException {
 		PreprocessingandLoading thread=new PreprocessingandLoading();
 		thread.start();
+		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+		SimpleDateFormat sdf = new SimpleDateFormat("EE MMM dd HH:mm:ss z yyyy");
 		File fXmlFile = new File("xml/shows.xml");
 		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
@@ -218,6 +223,12 @@ public final class RateLimitedSearch {
 					obj_tweet.put("keywords", keywords);
 					obj_tweet.put("show_list", show_list);
 					obj_tweet.put("character_list", character_list);
+					String stringdate=obj_tweet.getString("created_at");
+					obj_tweet.remove("created_at");
+					stringdate=stringdate.replace("+0000","IST");
+					Date d=sdf.parse(stringdate);
+					String created_at=dateFormat.format(d);
+					obj_tweet.put("created_at",created_at);
 					rawJSON=obj_tweet.toString();
 					storeJSON(rawJSON+"\n\n","show.txt");
 					TweetQueue.tweetQueue.add(rawJSON);
