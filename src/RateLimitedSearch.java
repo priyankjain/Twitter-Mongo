@@ -120,13 +120,15 @@ public final class RateLimitedSearch {
 		}
 		while(true)
 		{
-			RateLimitStatus rls= twitter.getRateLimitStatus().get("/users/search");;
-			if(rls.getRemaining()<30)
+			RateLimitStatus rls= twitter.getRateLimitStatus().get("/search/tweets");
+			if(rls.getRemaining()<10)
 				{
-					Thread.sleep(rls.getSecondsUntilReset()*1000);
+					int seconds=rls.getSecondsUntilReset();
+					System.out.println("Now sleeping for "+seconds+" seconds");
+					Thread.sleep(seconds*1000);
 					continue;
 				}
-			for(int i=0;i<30;i++)
+			for(int i=0;i<1;i++)
 			{	
 				// For each show
 				num=count%(no_of_shows+no_of_chars);
@@ -152,6 +154,7 @@ public final class RateLimitedSearch {
 					char_no=num-no_of_shows;
 					nNode=charSearchList.item(char_no);
 					character=(Element)nNode;
+					System.out.println("Now processing character "+character.getElementsByTagName("title").item(0).getTextContent());
 					tagList=character.getElementsByTagName("keywords").item(0).getTextContent().split(",");
 					since=character.getElementsByTagName("since").item(0).getTextContent();
 				}
@@ -162,82 +165,100 @@ public final class RateLimitedSearch {
 				}
 				q=q.substring(0, q.length()-4);
 				Query query=new Query(q);
-				query.setCount(5000);
+				query.setCount(10);
 				query.setSinceId(Long.parseLong(since));
-				QueryResult result;
-				result = twitter.search(query);
-				List<Status> tweets = result.getTweets();
-				try
+				QueryResult result=null;
+				List<Status> tweets=null;
+				int iter=0;
+				do
 				{
-				for (Status tweet : tweets) 
+					try
 					{
-					String rawJSON = DataObjectFactory.getRawJSON(tweet);
-					JSONObject obj_tweet=new JSONObject(rawJSON);
-					//obj_tweet.put("show_name",show.getElementsByTagName("name").item(0).getTextContent());
-					String tweet_text=obj_tweet.getString("text");
-					String keywords="";
-					String show_list="";
-					String character_list="";
-					if(!isChar)
-					show_list=show.getElementsByTagName("name").item(0).getTextContent().toLowerCase()+",";
-					else
-					{
-						character_list=character.getElementsByTagName("title").item(0).getTextContent().toLowerCase()+",";
-						Element parent_show=(Element)character.getParentNode().getParentNode();
-						String parent_show_name=parent_show.getElementsByTagName("name").item(0).getTextContent().toLowerCase();
-						if(!show_list.contains(parent_show_name))
+						System.out.println("iteration number "+iter);
+						iter++;
+						if(iter%10==0)
 						{
-							show_list+=parent_show_name+",";
-						}
-					}
-					for(int j=0;j<tagList.length;j++)
-					{
-						if(tweet_text.toLowerCase().contains(tagList[j].toLowerCase()))
+							rls= twitter.getRateLimitStatus().get("/search/tweets");
+							if(rls.getRemaining()<10)
 							{
-								keywords+=tagList[j].toLowerCase()+",";
-							}	
-					}
-					Iterator it=showMap.entrySet().iterator();
-					while(it.hasNext())
-					{
-						Map.Entry me=(Map.Entry)it.next();
-						if(tweet_text.toLowerCase().contains((String)me.getKey()) && !show_list.contains((String)me.getValue()))
-						{
-							show_list+=me.getValue()+",";
-						}
-					}
-					it=charMap.entrySet().iterator();
-					while(it.hasNext())
-					{
-						Map.Entry me=(Map.Entry)it.next();
-						String show_for_character[]=((String)me.getValue()).split(",");
-						if(tweet_text.toLowerCase().contains((String)me.getKey()) && !character_list.contains(show_for_character[0]))
-						{
-							character_list+=show_for_character[0]+",";
-							if(!show_list.contains(show_for_character[1]))
-							{
-								show_list+=show_for_character[1]+",";
+								int seconds=rls.getSecondsUntilReset();
+								System.out.println("Now sleeping for "+seconds+" seconds");
+								Thread.sleep(seconds*1000);
+								continue;
 							}
 						}
+						result = twitter.search(query);
+						tweets = result.getTweets();
+					for (Status tweet : tweets) 
+						{
+						String rawJSON = DataObjectFactory.getRawJSON(tweet);
+						JSONObject obj_tweet=new JSONObject(rawJSON);
+						//obj_tweet.put("show_name",show.getElementsByTagName("name").item(0).getTextContent());
+						String tweet_text=obj_tweet.getString("text");
+						String keywords="";
+						String show_list="";
+						String character_list="";
+						if(!isChar)
+						show_list=show.getElementsByTagName("name").item(0).getTextContent().toLowerCase()+",";
+						else
+						{
+							character_list=character.getElementsByTagName("title").item(0).getTextContent().toLowerCase()+",";
+							Element parent_show=(Element)character.getParentNode().getParentNode();
+							String parent_show_name=parent_show.getElementsByTagName("name").item(0).getTextContent().toLowerCase();
+							if(!show_list.contains(parent_show_name))
+							{
+								show_list+=parent_show_name+",";
+							}
+						}
+						for(int j=0;j<tagList.length;j++)
+						{
+							if(tweet_text.toLowerCase().contains(tagList[j].toLowerCase()))
+								{
+									keywords+=tagList[j].toLowerCase()+",";
+								}	
+						}
+						Iterator it=showMap.entrySet().iterator();
+						while(it.hasNext())
+						{
+							Map.Entry me=(Map.Entry)it.next();
+							if(tweet_text.toLowerCase().contains((String)me.getKey()) && !show_list.contains((String)me.getValue()))
+							{
+								show_list+=me.getValue()+",";
+							}
+						}
+						it=charMap.entrySet().iterator();
+						while(it.hasNext())
+						{
+							Map.Entry me=(Map.Entry)it.next();
+							String show_for_character[]=((String)me.getValue()).split(",");
+							if(tweet_text.toLowerCase().contains((String)me.getKey()) && !character_list.contains(show_for_character[0]))
+							{
+								character_list+=show_for_character[0]+",";
+								if(!show_list.contains(show_for_character[1]))
+								{
+									show_list+=show_for_character[1]+",";
+								}
+							}
+						}
+						obj_tweet.put("keywords", keywords);
+						obj_tweet.put("show_list", show_list);
+						obj_tweet.put("character_list", character_list);
+						String stringdate=obj_tweet.getString("created_at");
+						obj_tweet.remove("created_at");
+						stringdate=stringdate.replace("+0000","IST");
+						Date d=sdf.parse(stringdate);
+						String created_at=dateFormat.format(d);
+						obj_tweet.put("created_at",created_at);
+						rawJSON=obj_tweet.toString();
+						storeJSON(rawJSON+"\n\n","show.txt");
+						TweetQueue.tweetQueue.add(rawJSON);
+						}
 					}
-					obj_tweet.put("keywords", keywords);
-					obj_tweet.put("show_list", show_list);
-					obj_tweet.put("character_list", character_list);
-					String stringdate=obj_tweet.getString("created_at");
-					obj_tweet.remove("created_at");
-					stringdate=stringdate.replace("+0000","IST");
-					Date d=sdf.parse(stringdate);
-					String created_at=dateFormat.format(d);
-					obj_tweet.put("created_at",created_at);
-					rawJSON=obj_tweet.toString();
-					storeJSON(rawJSON+"\n\n","show.txt");
-					TweetQueue.tweetQueue.add(rawJSON);
+					catch(Exception e)
+					{
+						e.printStackTrace();
 					}
-				}
-				catch(Exception e)
-				{
-					e.printStackTrace();
-				}
+				}while((query = result.nextQuery())!=null);
 				if(tweets.size()>1)
 				since=String.valueOf(tweets.get(tweets.size()-1).getId());
 				if(!isChar)
