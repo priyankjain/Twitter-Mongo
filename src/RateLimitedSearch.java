@@ -128,7 +128,7 @@ public final class RateLimitedSearch {
 					Thread.sleep(seconds*1000);
 					continue;
 				}
-			for(int i=0;i<1;i++)
+			for(int i=0;i<10;i++)
 			{	
 				// For each show
 				num=count%(no_of_shows+no_of_chars);
@@ -165,7 +165,7 @@ public final class RateLimitedSearch {
 				}
 				q=q.substring(0, q.length()-4);
 				Query query=new Query(q);
-				query.setCount(10);
+				query.setCount(100);
 				query.setSinceId(Long.parseLong(since));
 				QueryResult result=null;
 				List<Status> tweets=null;
@@ -252,28 +252,43 @@ public final class RateLimitedSearch {
 						rawJSON=obj_tweet.toString();
 						storeJSON(rawJSON+"\n\n","show.txt");
 						TweetQueue.tweetQueue.add(rawJSON);
+						}//End of for(Status tweet:tweets)
+					
+						if(tweets.size()>1)	
+						since=String.valueOf(tweets.get(tweets.size()-1).getId());
+						if(!isChar)
+						{
+							int item_no=show.getElementsByTagName("since").getLength();
+							show.getElementsByTagName("since").item(item_no-1).setTextContent(since);
 						}
+						else
+						character.getElementsByTagName("since").item(0).setTextContent(since);
+						TransformerFactory transformerFactory = TransformerFactory.newInstance();
+						Transformer transformer = transformerFactory.newTransformer();
+						DOMSource domSource = new DOMSource(doc);
+						StreamResult streamResult = new StreamResult(fXmlFile);
+						transformer.transform(domSource, streamResult);
 					}
 					catch(Exception e)
 					{
 						e.printStackTrace();
 					}
 				}while((query = result.nextQuery())!=null);
-				if(tweets.size()>1)
-				since=String.valueOf(tweets.get(tweets.size()-1).getId());
-				if(!isChar)
-				{
-					int item_no=show.getElementsByTagName("since").getLength();
-					show.getElementsByTagName("since").item(item_no-1).setTextContent(since);
-				}
-				else
-				character.getElementsByTagName("since").item(0).setTextContent(since);
-				TransformerFactory transformerFactory = TransformerFactory.newInstance();
-				Transformer transformer = transformerFactory.newTransformer();
-				DOMSource domSource = new DOMSource(doc);
-				StreamResult streamResult = new StreamResult(fXmlFile);
-				transformer.transform(domSource, streamResult);
-			}
-		}	
-	}
-}
+//				if(tweets.size()>1)
+//				since=String.valueOf(tweets.get(tweets.size()-1).getId());
+//				if(!isChar)
+//				{
+//					int item_no=show.getElementsByTagName("since").getLength();
+//					show.getElementsByTagName("since").item(item_no-1).setTextContent(since);
+//				}
+//				else
+//				character.getElementsByTagName("since").item(0).setTextContent(since);
+//				TransformerFactory transformerFactory = TransformerFactory.newInstance();
+//				Transformer transformer = transformerFactory.newTransformer();
+//				DOMSource domSource = new DOMSource(doc);
+//				StreamResult streamResult = new StreamResult(fXmlFile);
+//				transformer.transform(domSource, streamResult);
+			}//End of for loop
+		}	//End of while true loop
+	}//End of main function
+}//End of class
