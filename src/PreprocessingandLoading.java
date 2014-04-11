@@ -33,22 +33,15 @@ public class PreprocessingandLoading extends Thread{
 				//Retweet
 				JSONObject obj_user;
 				String user_id;
+				SentimentClassifier s=new SentimentClassifier();
 				if(obj_tweet.has("retweeted_status"))
 				{
 					JSONObject retweeted_obj_tweet=obj_tweet.getJSONObject("retweeted_status");
 					text=retweeted_obj_tweet.getString("text");
 					retweeted_obj_tweet.remove("id");
 					String retweet_id=retweeted_obj_tweet.getString("id_str");
-					int mainSentiment;
-					if(text.length()!=0)
-					{
-						mainSentiment = SentimentAnalyzer.findSentiment(text);					
-					}
-					else
-					{
-						mainSentiment=-1;
-					}					
-					obj_tweet.put("sentiment", mainSentiment);
+					String sent=s.classify(text);				
+					obj_tweet.put("sentiment", sent);
 					obj_tweet.remove("retweeted_status");
 					obj_tweet.put("retweet_id",retweet_id);
 					/*
@@ -73,16 +66,8 @@ public class PreprocessingandLoading extends Thread{
 				else					
 				{
 				text=obj_tweet.getString("text");
-				int mainSentiment;
-				if(text.length()!=0)
-				{
-					mainSentiment = SentimentAnalyzer.findSentiment(text);					
-				}
-				else
-				{
-					mainSentiment=-1;
-				}					
-				obj_tweet.put("sentiment", mainSentiment);
+				String sent=s.classify(text);				
+				obj_tweet.put("sentiment", sent);
 				obj_tweet.put("retweet_id","null");
 				obj_user=obj_tweet.getJSONObject("user");
 				obj_tweet.remove("user");

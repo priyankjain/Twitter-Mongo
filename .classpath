@@ -20,5 +20,6 @@
 	<classpathentry kind="var" path="TWITTER_MONGO_LIBRARIES/xom-1.2.10-src.jar"/>
 	<classpathentry kind="var" path="TWITTER_MONGO_LIBRARIES/xom.jar"/>
 	<classpathentry kind="var" path="TWITTER_MONGO_LIBRARIES/java-json.jar"/>
+	<classpathentry kind="var" path="TWITTER_MONGO_LIBRARIES/lingpipe-4.1.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

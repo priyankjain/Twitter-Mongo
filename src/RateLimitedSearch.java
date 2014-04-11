@@ -250,7 +250,7 @@ public final class RateLimitedSearch {
 						String created_at=dateFormat.format(d);
 						obj_tweet.put("created_at",created_at);
 						rawJSON=obj_tweet.toString();
-						storeJSON(rawJSON+"\n\n","show.txt");
+//						storeJSON(rawJSON+"\n\n","show.txt");
 						TweetQueue.tweetQueue.add(rawJSON);
 						}//End of for(Status tweet:tweets)
 					
