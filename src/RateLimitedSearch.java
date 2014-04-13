@@ -13,6 +13,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.TimeZone;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -81,6 +82,8 @@ public final class RateLimitedSearch {
 		thread.start();
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		SimpleDateFormat sdf = new SimpleDateFormat("EE MMM dd HH:mm:ss z yyyy");
+		sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+		dateFormat.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
 		File fXmlFile = new File("xml/shows.xml");
 		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
@@ -176,7 +179,7 @@ public final class RateLimitedSearch {
 					{
 						System.out.println("iteration number "+iter);
 						iter++;
-						if(iter%10==0)
+						if(iter%5==0)
 						{
 							rls= twitter.getRateLimitStatus().get("/search/tweets");
 							if(rls.getRemaining()<10)
@@ -245,7 +248,7 @@ public final class RateLimitedSearch {
 						obj_tweet.put("character_list", character_list);
 						String stringdate=obj_tweet.getString("created_at");
 						obj_tweet.remove("created_at");
-						stringdate=stringdate.replace("+0000","IST");
+						stringdate=stringdate.replace("+0000","UTC");
 						Date d=sdf.parse(stringdate);
 						String created_at=dateFormat.format(d);
 						obj_tweet.put("created_at",created_at);
@@ -273,7 +276,7 @@ public final class RateLimitedSearch {
 					{
 						e.printStackTrace();
 					}
-				}while((query = result.nextQuery())!=null);
+				}while(result!=null && query!=null && (query = result.nextQuery())!=null);
 //				if(tweets.size()>1)
 //				since=String.valueOf(tweets.get(tweets.size()-1).getId());
 //				if(!isChar)
